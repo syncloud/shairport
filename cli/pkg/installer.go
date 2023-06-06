@@ -1,7 +1,6 @@
 package pkg
 
 import (
-	"github.com/google/uuid"
 	cp "github.com/otiai10/copy"
 	"os"
 	"path"
