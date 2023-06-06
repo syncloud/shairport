@@ -60,17 +60,15 @@ local build(arch, dind) = [{
               "./deps.sh",
               "py.test -x -s test.py --distro=buster --domain=buster.com --app-archive-path=$APP_ARCHIVE_PATH --device-host=" + name + ".buster.com --app=" + name + " --arch=" + arch
             ]
-        }
-
-] else [] ) +[
-    {
+        },
+	{
         name: "test-upgrade",
         image: "python:3.8-slim-buster",
         commands: [
           "APP_ARCHIVE_PATH=$(realpath $(cat package.name))",
           "cd test",
           "./deps.sh",
-          "py.test -x -s upgrade.py --distro=buster --ui-mode=desktop --domain=buster.com --app-archive-path=$APP_ARCHIVE_PATH --device-host=" + name + ".buster.com --app=" + name + " --browser=" + browser,
+          "py.test -x -s upgrade.py --distro=buster --ui-mode=desktop --domain=buster.com --app-archive-path=$APP_ARCHIVE_PATH --device-host=" + name + ".buster.com --app=" + name,
         ]
     },
         {
