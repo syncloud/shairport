@@ -37,7 +37,6 @@ func (i *Installer) Install() error {
 		return err
 	}
 
-
 	err = os.Mkdir(path.Join(CommonDir, "log"), 0755)
 	if err != nil {
 		return err
