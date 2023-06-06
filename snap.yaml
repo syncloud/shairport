@@ -1,0 +1,27 @@
+apps:
+  nginx:
+    user: shairport
+    command: bin/service.service.sh
+    daemon: simple
+    restart-condition: always
+
+  storage-change:
+    command: bin/cli storage-change
+
+  access-change:
+    command: bin/cli access-change
+
+  backup-pre-stop:
+    command: bin/cli backup-pre-stop
+
+  restore-pre-start:
+    command: bin/cli restore-pre-start
+
+  restore-post-start:
+    command: bin/cli restore-post-start
+
+confinement: strict
+description: Shairport
+grade: stable
+name: shairport
+summary: Shairport
