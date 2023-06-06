@@ -1,6 +1,6 @@
 local name = "shairport";
 local go = "1.19.7-bullseye";
-local version = "0.6.20";
+local version = "4.2";
 
 local build(arch, dind) = [{
     kind: "pipeline",
