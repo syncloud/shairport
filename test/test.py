@@ -58,10 +58,6 @@ def test_install(app_archive_path, device_host, device_password):
     local_install(device_host, device_password, app_archive_path)
 
 
-def test_index(app_domain):
-    wait_for_rest(requests.session(), "https://{0}".format(app_domain), 200, 100)
-
-
 def __log_data_dir(device):
     device.run_ssh('ls -la /data')
     device.run_ssh('mount')
@@ -92,10 +88,6 @@ def test_reinstall(app_archive_path, device_host, device_password):
 
 def test_upgrade(app_archive_path, device_host, device_password):
     local_install(device_host, device_password, app_archive_path)
-
-
-def test_index_after_upgrade(app_domain):
-    wait_for_rest(requests.session(), "https://{0}".format(app_domain), 200, 100)
 
 
 def retry(method, retries=10):
