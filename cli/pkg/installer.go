@@ -84,7 +84,12 @@ func (i *Installer) UpdateVersion() error {
 }
 
 func (i *Installer) UpdateConfigs() error {
-	return cp.Copy(path.Join(AppDir, "config"), path.Join(DataDir, "config"))
+	err := cp.Copy(path.Join(AppDir, "config"), path.Join(DataDir, "config"))
+	if err != nil {
+		return err
+	}
+	return cp.Copy(path.Join(AppDir, "config", "shairport-dbus.conf"), path.Join("/etc/dbus-1/system.d", "shairport-dbus.conf"))
+
 }
 
 func (i *Installer) FixPermissions() error {
