@@ -1,5 +1,5 @@
 apps:
-  nginx:
+  shairport:
     user: shairport
     command: bin/service.service.sh
     daemon: simple
