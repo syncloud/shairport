@@ -7,10 +7,10 @@ import (
 )
 
 const (
-	App       = "shareport"
-	AppDir    = "/snap/shareport/current"
-	DataDir   = "/var/snap/shareport/current"
-	CommonDir = "/var/snap/shareport/common"
+	App       = "shairport"
+	AppDir    = "/snap/shairport/current"
+	DataDir   = "/var/snap/shairport/current"
+	CommonDir = "/var/snap/shairport/common"
 )
 
 type Installer struct {

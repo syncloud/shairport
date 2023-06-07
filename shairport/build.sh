@@ -2,7 +2,7 @@
 
 DIR=$( cd "$( dirname "$0" )" && pwd )
 cd ${DIR}
-BUILD_DIR=${DIR}/../build/snap/shareport
+BUILD_DIR=${DIR}/../build/snap/shairport
 while ! docker version ; do
   echo "waiting for docker"
   sleep 1
