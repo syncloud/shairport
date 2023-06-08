@@ -1,7 +1,7 @@
 apps:
 
   nqptp:
-    user: nqptp
+    user: shairport
     command: bin/service.nqptp.sh
     daemon: simple
     restart-condition: always
