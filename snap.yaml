@@ -1,9 +1,17 @@
 apps:
+
+  nqptp:
+    user: nqptp
+    command: bin/service.nqptp.sh
+    daemon: simple
+    restart-condition: always
+
   shairport:
     user: shairport
     command: bin/service.service.sh
     daemon: simple
     restart-condition: always
+
 
   storage-change:
     command: bin/cli storage-change
