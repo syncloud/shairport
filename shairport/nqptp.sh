@@ -1,6 +1,6 @@
-#!/bin/bash -xe
+#!/bin/bash -e
 DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-LIBS=$LIBS:$(echo ${DIR}/lib)
+LIBS=$(echo ${DIR}/lib)
 LIBS=$LIBS:$(echo ${DIR}/usr/lib)
 LIBS=$LIBS:$(echo ${DIR}/usr/lib/engines-3)
 LIBS=$LIBS:$(echo ${DIR}/usr/lib/libv4l)
