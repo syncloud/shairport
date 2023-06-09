@@ -30,7 +30,10 @@ func (i *Installer) Install() error {
 	if err != nil {
 		return err
 	}
-
+	err = i.AddToUserGroups()
+	if err != nil {
+		return err
+	}
 	err = i.UpdateConfigs()
 	if err != nil {
 		return err
@@ -57,7 +60,11 @@ func (i *Installer) PreRefresh() error {
 }
 
 func (i *Installer) PostRefresh() error {
-	err := i.UpdateConfigs()
+	err := i.AddToUserGroups()
+	if err != nil {
+		return err
+	}
+	err = i.UpdateConfigs()
 	if err != nil {
 		return err
 	}
@@ -88,7 +95,18 @@ func (i *Installer) UpdateConfigs() error {
 	if err != nil {
 		return err
 	}
-	return cp.Copy(path.Join(AppDir, "config", "shairport-dbus.conf"), path.Join("/etc/dbus-1/system.d", "shairport-dbus.conf"))
+	err = cp.Copy(path.Join(AppDir, "config", "shairport-dbus.conf"), path.Join("/etc/dbus-1/system.d", "shairport-dbus.conf"))
+	if err != nil {
+		return err
+	}
+	alsaConfDir := "/usr/share/alsa"
+	if _, err := os.Stat(alsaConfDir); os.IsNotExist(err) {
+		err = cp.Copy(path.Join(AppDir, "/shairport/usr/share/alsa"), alsaConfDir)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 
 }
 
@@ -98,6 +116,14 @@ func (i *Installer) FixPermissions() error {
 		return err
 	}
 	err = Chown(CommonDir, App)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (i *Installer) AddToUserGroups() error {
+	err := AddUserToGroup(App, "audio")
 	if err != nil {
 		return err
 	}
