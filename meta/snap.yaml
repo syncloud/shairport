@@ -29,7 +29,7 @@ apps:
     command: bin/cli restore-post-start
 
 confinement: strict
-description: Shairport
+description: AirPlay audio player
 grade: stable
 name: shairport
-summary: Shairport
+summary: ShairPort
