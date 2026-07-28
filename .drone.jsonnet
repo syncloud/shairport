@@ -1,4 +1,5 @@
 local name = "shairport";
+local store_publisher = "stable-346";
 local go = "1.20.4";
 local version = "4.2";
 
@@ -72,27 +73,16 @@ local build(arch, dind) = [{
         ]
     },
         {
-            name: "upload",
-        image: "debian:buster-slim",
-        environment: {
-            AWS_ACCESS_KEY_ID: {
-                from_secret: "AWS_ACCESS_KEY_ID"
+            name: "publish",
+            image: "syncloud/store-publisher:" + store_publisher,
+            environment: {
+                SYNCLOUD_TOKEN: { from_secret: "SYNCLOUD_TOKEN" }
             },
-            AWS_SECRET_ACCESS_KEY: {
-                from_secret: "AWS_SECRET_ACCESS_KEY"
+            command: ["snap", "-c", "${DRONE_BRANCH}"],
+            when: {
+                branch: ["master", "stable"],
+                event: ["push"]
             }
-        },
-        commands: [
-          "PACKAGE=$(cat package.name)",
-          "apt update && apt install -y wget",
-          "wget https://github.com/syncloud/snapd/releases/download/1/syncloud-release-" + arch,
-          "chmod +x syncloud-release-*",
-          "./syncloud-release-* publish -f $PACKAGE -b $DRONE_BRANCH"
-         ],
-        when: {
-            branch: ["stable", "master"],
-            event: [ "push" ]
-        }
         }] + [
         {
             name: "artifact",
@@ -177,41 +167,7 @@ local build(arch, dind) = [{
             temp: {}
         },
       ]
-},
- {
-      kind: "pipeline",
-      type: "docker",
-      name: "promote-" + arch,
-      platform: {
-          os: "linux",
-          arch: arch
-      },
-      steps: [
-      {
-              name: "promote",
-              image: "debian:buster-slim",
-              environment: {
-                  AWS_ACCESS_KEY_ID: {
-                      from_secret: "AWS_ACCESS_KEY_ID"
-                  },
-                  AWS_SECRET_ACCESS_KEY: {
-                      from_secret: "AWS_SECRET_ACCESS_KEY"
-                  }
-              },
-              commands: [
-                "apt update && apt install -y wget",
-                "wget https://github.com/syncloud/snapd/releases/download/1/syncloud-release-" + arch + " -O release --progress=dot:giga",
-                "chmod +x release",
-                "./release promote -n " + name + " -a $(dpkg --print-architecture)"
-              ]
-        }
-       ],
-       trigger: {
-        event: [
-          "promote"
-        ]
-      }
-  }];
+}];
 
 build("amd64", "20.10.21-dind") +
 build("arm64", "19.03.8-dind") +
