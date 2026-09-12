@@ -80,7 +80,7 @@ local build(arch, dind) = [{
             },
             command: ["snap", "-c", "${DRONE_BRANCH}"],
             when: {
-                branch: ["master", "stable"],
+                branch: ["stable"],
                 event: ["push"]
             }
         }] + [
