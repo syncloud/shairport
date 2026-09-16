@@ -109,8 +109,7 @@ local build(arch, dind) = [{
     ],
      trigger: {
        event: [
-         "push",
-         "pull_request"
+         "push"
        ]
      },
     services: [
