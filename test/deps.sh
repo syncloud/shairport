@@ -1,9 +1,11 @@
 #!/bin/bash -e
 DIR=$( cd "$( dirname "$0" )" && pwd )
+cd ${DIR}
 
-while ! apt-get update; do
-  sleep 1
-  echo "retry"
+for i in $(seq 1 10); do
+  apt-get update && apt-get install -y sshpass openssh-client wget && break
+  echo "retry apt"
+  sleep 5
 done
-apt-get install -y sshpass openssh-client wget
+
 pip install -r requirements.txt

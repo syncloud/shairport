@@ -1,173 +1,114 @@
-local name = "shairport";
-local store_publisher = "stable-346";
-local go = "1.20.4";
-local version = "4.2";
+local name = 'shairport';
+local version = '5.6';
+local go = '1.24.0';
+local python = '3.12-slim-bookworm';
+local debian = 'bookworm-slim';
+local platform = '26.07.01';
+local store_publisher = 'stable-346';
+local distro_default = 'bookworm';
+local distros = ['bookworm', 'buster'];
 
-local build(arch, dind) = [{
-    kind: "pipeline",
-    type: "docker",
-    name: arch,
-    platform: {
-        os: "linux",
-        arch: arch
+local platform_image(distro) = 'syncloud/platform-' + distro + ':' + platform;
+
+local build(arch) = [{
+  kind: 'pipeline',
+  type: 'docker',
+  name: arch,
+  platform: {
+    os: 'linux',
+    arch: arch,
+  },
+  steps: [
+    {
+      name: 'shairport',
+      image: 'mikebrady/shairport-sync:' + version,
+      commands: ['./shairport/build.sh'],
     },
-    steps: [
-        {
-            name: "version",
-            image: "debian:buster-slim",
-            commands: [
-                "echo $DRONE_BUILD_NUMBER > version"
-            ]
-        },
-        {
-            name: "shairport",
-            image: "docker:" + dind,
-            commands: [
-                "./shairport/build.sh " + version
-            ],
-            volumes: [
-                {
-                    name: "dockersock",
-                    path: "/var/run"
-                }
-            ]
-        },
-        {
-            name: "cli",
-            image: "golang:" + go,
-            commands: [
-                "cd cli",
-                "go build -ldflags '-linkmode external -extldflags -static' -o ../build/snap/meta/hooks/install ./cmd/install",
-                "go build -ldflags '-linkmode external -extldflags -static' -o ../build/snap/meta/hooks/configure ./cmd/configure",
-                "go build -ldflags '-linkmode external -extldflags -static' -o ../build/snap/meta/hooks/pre-refresh ./cmd/pre-refresh",
-                "go build -ldflags '-linkmode external -extldflags -static' -o ../build/snap/meta/hooks/post-refresh ./cmd/post-refresh",
-                "go build -ldflags '-linkmode external -extldflags -static' -o ../build/snap/bin/cli ./cmd/cli",
-            ]
-        },
-        {
-            name: "package",
-            image: "debian:buster-slim",
-            commands: [
-                "VERSION=$(cat version)",
-                "./package.sh " + name + " $VERSION "
-            ]
-        },
-        {
-            name: "test-integration",
-            image: "python:3.8-slim-buster",
-            commands: [
-              "APP_ARCHIVE_PATH=$(realpath $(cat package.name))",
-              "cd test",
-              "./deps.sh",
-              "py.test -x -s test.py --distro=buster --domain=buster.com --app-archive-path=$APP_ARCHIVE_PATH --device-host=" + name + ".buster.com --app=" + name + " --arch=" + arch
-            ]
-        },
-	{
-        name: "test-upgrade",
-        image: "python:3.8-slim-buster",
-        commands: [
-          "APP_ARCHIVE_PATH=$(realpath $(cat package.name))",
-          "cd test",
-          "./deps.sh",
-          "py.test -x -s upgrade.py --distro=buster --ui-mode=desktop --domain=buster.com --app-archive-path=$APP_ARCHIVE_PATH --device-host=" + name + ".buster.com --app=" + name,
-        ]
+  ] + [
+    {
+      name: 'shairport test ' + distro,
+      image: platform_image(distro),
+      commands: ['./shairport/test.sh'],
+    }
+    for distro in distros
+  ] + [
+    {
+      name: 'cli',
+      image: 'golang:' + go,
+      commands: ['./cli/build.sh'],
     },
-        {
-            name: "publish",
-            image: "syncloud/store-publisher:" + store_publisher,
-            environment: {
-                SYNCLOUD_TOKEN: { from_secret: "SYNCLOUD_TOKEN" }
-            },
-            command: ["snap", "-c", "${DRONE_BRANCH}"],
-            when: {
-                branch: ["stable"],
-                event: ["push"]
-            }
-        }] + [
-        {
-            name: "artifact",
-            image: "appleboy/drone-scp:1.6.4",
-            settings: {
-                host: {
-                    from_secret: "artifact_host"
-                },
-                username: "artifact",
-                key: {
-                    from_secret: "artifact_key"
-                },
-                timeout: "2m",
-                command_timeout: "2m",
-                target: "/home/artifact/repo/" + name + "/${DRONE_BUILD_NUMBER}-" + arch,
-                source: "artifact/*",
-		             strip_components: 1
-            },
-            when: {
-              status: [ "failure", "success" ],
-              event: [ "push" ]
-            }
-        }
-    ],
-     trigger: {
-       event: [
-         "push"
-       ]
-     },
-    services: [
-        {
-            name: "docker",
-            image: "docker:" + dind,
-            privileged: true,
-            volumes: [
-                {
-                    name: "dockersock",
-                    path: "/var/run"
-                }
-            ]
-        },
-        {
-            name: name + ".buster.com",
-            image: "syncloud/platform-buster-" + arch + ":22.02",
-            privileged: true,
-            volumes: [
-                {
-                    name: "dbus",
-                    path: "/var/run/dbus"
-                },
-                {
-                    name: "dev",
-                    path: "/dev"
-                }
-            ]
-        }
-    ],
-    volumes: [
-        {
-            name: "dbus",
-            host: {
-                path: "/var/run/dbus"
-            }
-        },
-        {
-            name: "dev",
-            host: {
-                path: "/dev"
-            }
-        },
-        {
-            name: "shm",
-            temp: {}
-        },
-        {
-            name: "dockersock",
-            temp: {}
-        },
-        {
-            name: "videos",
-            temp: {}
-        },
-      ]
+    {
+      name: 'package',
+      image: 'debian:' + debian,
+      commands: ['./package.sh ' + name + ' $DRONE_BUILD_NUMBER'],
+    },
+  ] + [
+    {
+      name: 'test ' + distro,
+      image: 'python:' + python,
+      commands: ['./test/ci-test.sh test.py ' + distro],
+    }
+    for distro in distros
+  ] + [
+    {
+      name: 'test-upgrade',
+      image: 'python:' + python,
+      commands: ['./test/ci-test.sh upgrade.py ' + distro_default],
+    },
+    {
+      name: 'publish',
+      image: 'syncloud/store-publisher:' + store_publisher,
+      environment: {
+        SYNCLOUD_TOKEN: { from_secret: 'SYNCLOUD_TOKEN' },
+      },
+      command: ['snap', '-c', '${DRONE_BRANCH}'],
+      when: {
+        branch: ['stable'],
+        event: ['push'],
+      },
+    },
+    {
+      name: 'artifact',
+      image: 'appleboy/drone-scp:1.6.4',
+      settings: {
+        host: { from_secret: 'artifact_host' },
+        username: 'artifact',
+        key: { from_secret: 'artifact_key' },
+        timeout: '2m',
+        command_timeout: '2m',
+        target: '/home/artifact/repo/' + name + '/${DRONE_BUILD_NUMBER}-' + arch,
+        source: 'artifact/*',
+        strip_components: 1,
+      },
+      when: {
+        status: ['failure', 'success'],
+        event: ['push'],
+      },
+    },
+  ],
+  trigger: {
+    event: ['push'],
+  },
+  services: [
+    {
+      name: name + '.' + distro + '.com',
+      image: platform_image(distro),
+      privileged: true,
+      entrypoint: ['/bin/sh', '-c', "mkdir -p /etc/systemd/system/snapd.service.d && printf '[Service]\\nExecStartPost=/bin/sh -c \"/usr/bin/snap set system refresh.hold=2099-01-01T00:00:00Z\"\\n' > /etc/systemd/system/snapd.service.d/disable-refresh.conf && exec /sbin/init"],
+      volumes: [
+        { name: 'dbus', path: '/var/run/dbus' },
+        { name: 'dev', path: '/dev' },
+      ],
+    }
+    for distro in distros
+  ],
+  volumes: [
+    { name: 'dbus', host: { path: '/var/run/dbus' } },
+    { name: 'dev', host: { path: '/dev' } },
+    { name: 'shm', temp: {} },
+  ],
 }];
 
-build("amd64", "20.10.21-dind") +
-build("arm64", "19.03.8-dind") +
-build("arm", "19.03.8-dind")
+build('amd64') +
+build('arm64') +
+build('arm')

@@ -1,35 +1,27 @@
-apps:
+name: shairport
+summary: ShairPort
+description: AirPlay audio player
+grade: stable
 
+apps:
   nqptp:
-#    user: root
     command: bin/service.nqptp.sh
     daemon: simple
     restart-condition: always
-
+    restart-delay: 10s
   shairport:
     user: shairport
     command: bin/service.service.sh
     daemon: simple
     restart-condition: always
-
-
+    restart-delay: 10s
   storage-change:
     command: bin/cli storage-change
-
   access-change:
     command: bin/cli access-change
-
   backup-pre-stop:
     command: bin/cli backup-pre-stop
-
   restore-pre-start:
     command: bin/cli restore-pre-start
-
   restore-post-start:
     command: bin/cli restore-post-start
-
-confinement: strict
-description: AirPlay audio player
-grade: stable
-name: shairport
-summary: ShairPort
