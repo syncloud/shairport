@@ -1,2 +1,6 @@
 .idea
 build
+version
+package.name
+artifact
+*.snap
